@@ -11,14 +11,14 @@ const StatisticsLine = ({text, value}) => <tr>
 
 const Statistics = ({good,bad,neutral,all}) => {
   const statistics = <div>
-    <table>
+    <table><tbody>
       <StatisticsLine text="good" value={good}/>
       <StatisticsLine text="neutral" value={neutral}/>
       <StatisticsLine text="bad" value={bad}/>
       <StatisticsLine text="all" value={all}/>
       <StatisticsLine text="average" value={(good - bad) / all}/>
       <StatisticsLine text="positive" value={good/all*100 + "%"}/>
-    </table>
+    </tbody></table>
   </div>
 
   if (all > 0) return <div>
