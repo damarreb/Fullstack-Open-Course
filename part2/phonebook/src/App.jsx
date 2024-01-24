@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {Persons, Filter, PersonForm} from './components'
-import axios from 'axios'
+import personService from './personService'
 
 const App = () => {
 
@@ -10,42 +10,56 @@ const App = () => {
   const [ newNumber, setNewNumber ] = useState('')
   const [ nameSearched, setNameSearched ] = useState('')
   
-  // Efect-Hook
+  // Effect-Hook
   const hook = () =>{
-    console.log("effect")
-    axios
-    .get("http://localhost:3001/persons").then(response =>{
-      console.log("promise fulfilled")
-      setPersons(response.data)
+    personService.getAll()
+    .then(data =>{
+      setPersons(data)
     })
   }
-
   useEffect(hook,[])
 
   const addPerson = (e) => {
     e.preventDefault()
 
     // name repeated
-    if (persons.find(p => p.name === newName) == undefined){
-      setPersons(persons.concat({name: newName, number: newNumber}))
+    const sameName = persons.find(p => p.name === newName)
+    if ( sameName == undefined){
+      const newPerson = {name: newName, number: newNumber}
+      personService.create(newPerson)
+      .then(p => setPersons(persons.concat({...newPerson, id: p.id})))
     }
-    else alert(`${newName} is already added to phonebook`)
-    
-    
+    else if (window.confirm(`${sameName.name} is already added to phonebook, replace the old number with a new one?`)){
+      const replacePerson = {...sameName, number: newNumber}
+      console.log(replacePerson)
+      personService.replace(replacePerson)
+      .then(replaced => setPersons(persons.map(p => p.id === replaced.id ? replaced : p)))
+    }
+  }
+
+  const erasePerson = (person) => {
+    setPersons(persons.filter(p => p.id !== person.id))
   }
 
   const onChangeName = (e) =>{setNewName(e.target.value)}
   const onChangeNumber = (e) =>{setNewNumber(e.target.value)}
   const onChangeSearch = (e) =>{setNameSearched(e.target.value)}
+
   return (
     <div>
       <h2>Phonebook</h2>
       <Filter onChangeSearch={onChangeSearch}/>
 
       <h3>add a new</h3>
-      <PersonForm onChangeName={onChangeName} onChangeNumber={onChangeNumber} addPerson={addPerson}/>
+      <PersonForm onChangeName={onChangeName}
+        onChangeNumber={onChangeNumber}
+        addPerson={addPerson}
+      />
       <h3>Numbers</h3>
-      <Persons persons={persons} nameSearched={nameSearched}/>
+      <Persons persons={persons}
+        nameSearched={nameSearched}
+        erasePerson={erasePerson}
+      />
     </div>
   )
 }

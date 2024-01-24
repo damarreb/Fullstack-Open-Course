@@ -1,9 +1,28 @@
-const Person = ({name,number},key) => <p key={key}>{name} {number}</p>
+import personService from "./personService"
 
-const Persons = ({persons, nameSearched}) => <>{persons.filter(
+const Person = (p) =>{
+
+  const onClickDelete = (e) => {
+    if (window.confirm(`Delete ${p.name} ?`)){
+    e.preventDefault()
+    personService.erase(p)
+    .then(p.erasePerson)
+  }}
+
+return <p key={p.id}>
+  {p.name} {p.number} <button onClick={onClickDelete}>delete</button>
+</p>
+}
+
+const Persons = ({persons, nameSearched, erasePerson}) => <>{persons.filter(
   p => p.name.toLowerCase().startsWith(nameSearched.toLowerCase()))
   .map(
-    p => <Person name={p.name} number={p.number} key={p.name}/>)
+    p => <Person key={p.id}
+            name={p.name}
+            number={p.number}
+            id={p.id}
+            erasePerson={() => erasePerson(p)}/>
+      )
 }</>
 
 const Filter = ({onChangeSearch}) => <>filter shown with <input onChange={onChangeSearch}/></>
