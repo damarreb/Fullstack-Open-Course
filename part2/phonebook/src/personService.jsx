@@ -14,7 +14,6 @@ const create = (person) =>{
 const erase = (person) =>{
     return axios.delete(`${baseUrl}/${person.id}`)
     .then(response => response.data)
-    .catch(e => alert(`Couldn't erase person ${person.name} with number ${person.number}`))
 }
 
 const replace = (person) =>{

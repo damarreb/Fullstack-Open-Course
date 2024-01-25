@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import {Persons, Filter, PersonForm} from './components'
+import {Persons, Filter, PersonForm, Notification} from './components'
 import personService from './personService'
-
+import './App.css'
 const App = () => {
 
 
@@ -9,15 +9,24 @@ const App = () => {
   const [ newName, setNewName ] = useState('')
   const [ newNumber, setNewNumber ] = useState('')
   const [ nameSearched, setNameSearched ] = useState('')
+  const [messageNotification, setMessageNotification] = useState(null)
+  const [typeNotification, setTypeNotification] = useState(null)
   
-  // Effect-Hook
-  const hook = () =>{
+  // Effect-Hooks
+  const hookGetPersons = () =>{
     personService.getAll()
     .then(data =>{
       setPersons(data)
     })
   }
-  useEffect(hook,[])
+
+  //
+  const setMessage = (type,message) => {
+    const timeout = 5000
+    setMessageNotification(message)
+    setTypeNotification(type)
+    setTimeout(()=>setMessageNotification(null),timeout)
+  }
 
   const addPerson = (e) => {
     e.preventDefault()
@@ -28,26 +37,39 @@ const App = () => {
       const newPerson = {name: newName, number: newNumber}
       personService.create(newPerson)
       .then(p => setPersons(persons.concat({...newPerson, id: p.id})))
+      .then(()=>setMessage('success',`Added ${newName}`))
     }
     else if (window.confirm(`${sameName.name} is already added to phonebook, replace the old number with a new one?`)){
       const replacePerson = {...sameName, number: newNumber}
-      console.log(replacePerson)
       personService.replace(replacePerson)
       .then(replaced => setPersons(persons.map(p => p.id === replaced.id ? replaced : p)))
+      .then(()=>setMessage('success',`Changed number of ${newName}`))
     }
+    
   }
 
   const erasePerson = (person) => {
     setPersons(persons.filter(p => p.id !== person.id))
   }
 
+  const onClickDelete = (e,p) => {
+    if (window.confirm(`Delete ${p.name} ?`)){
+    e.preventDefault()
+    personService.erase(p)
+    .then(erasePerson)
+    .catch(() => setMessage('error',`Information of ${p.name} has already been removed from server`))
+  }}
+
   const onChangeName = (e) =>{setNewName(e.target.value)}
   const onChangeNumber = (e) =>{setNewNumber(e.target.value)}
   const onChangeSearch = (e) =>{setNameSearched(e.target.value)}
 
+  useEffect(hookGetPersons,[])
+
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification type={typeNotification} message={messageNotification}/>
       <Filter onChangeSearch={onChangeSearch}/>
 
       <h3>add a new</h3>
@@ -58,7 +80,7 @@ const App = () => {
       <h3>Numbers</h3>
       <Persons persons={persons}
         nameSearched={nameSearched}
-        erasePerson={erasePerson}
+        onClickDelete={onClickDelete}
       />
     </div>
   )

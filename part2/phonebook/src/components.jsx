@@ -1,27 +1,18 @@
-import personService from "./personService"
-
 const Person = (p) =>{
 
-  const onClickDelete = (e) => {
-    if (window.confirm(`Delete ${p.name} ?`)){
-    e.preventDefault()
-    personService.erase(p)
-    .then(p.erasePerson)
-  }}
-
 return <p key={p.id}>
-  {p.name} {p.number} <button onClick={onClickDelete}>delete</button>
+  {p.name} {p.number} <button onClick={(e) =>p.onClickDelete(e,p)}>delete</button>
 </p>
 }
 
-const Persons = ({persons, nameSearched, erasePerson}) => <>{persons.filter(
+const Persons = ({persons, nameSearched, onClickDelete}) => <>{persons.filter(
   p => p.name.toLowerCase().startsWith(nameSearched.toLowerCase()))
   .map(
     p => <Person key={p.id}
             name={p.name}
             number={p.number}
             id={p.id}
-            erasePerson={() => erasePerson(p)}/>
+            onClickDelete={onClickDelete}/>
       )
 }</>
 
@@ -33,4 +24,16 @@ const PersonForm = ({onChangeName, onChangeNumber, addPerson}) => <form>
 <div> <button type="submit" onClick={addPerson}>add</button> </div>
 </form>
 
-export {Persons, Filter, PersonForm}
+const Notification = ({ type,message }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className={type}>
+      {message}
+    </div>
+  )
+}
+
+export {Persons, Filter, PersonForm, Notification}
