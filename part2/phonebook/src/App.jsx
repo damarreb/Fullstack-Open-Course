@@ -11,7 +11,7 @@ const App = () => {
   const [ nameSearched, setNameSearched ] = useState('')
   const [messageNotification, setMessageNotification] = useState(null)
   const [typeNotification, setTypeNotification] = useState(null)
-  
+  const [messageTimeoutId, setMessageTimeoutId] = useState(null)
   // Effect-Hooks
   const hookGetPersons = () =>{
     personService.getAll()
@@ -23,9 +23,10 @@ const App = () => {
   //
   const setMessage = (type,message) => {
     const timeout = 5000
+    clearTimeout(messageTimeoutId)
     setMessageNotification(message)
     setTypeNotification(type)
-    setTimeout(()=>setMessageNotification(null),timeout)
+    setMessageTimeoutId(setTimeout(()=>setMessageNotification(null),timeout))
   }
 
   const addPerson = (e) => {
@@ -38,12 +39,14 @@ const App = () => {
       personService.create(newPerson)
       .then(p => setPersons(persons.concat({...newPerson, id: p.id})))
       .then(()=>setMessage('success',`Added ${newName}`))
+      .catch(error => setMessage('error',`Couldn't add person ${newName}: ${error.response.data.error}`))
     }
     else if (window.confirm(`${sameName.name} is already added to phonebook, replace the old number with a new one?`)){
       const replacePerson = {...sameName, number: newNumber}
       personService.replace(replacePerson)
       .then(replaced => setPersons(persons.map(p => p.id === replaced.id ? replaced : p)))
       .then(()=>setMessage('success',`Changed number of ${newName}`))
+      .catch(error => setMessage('error',`Couldn't change number of ${newName}: ${error.response.data.error}`))
     }
     
   }
@@ -56,7 +59,8 @@ const App = () => {
     if (window.confirm(`Delete ${p.name} ?`)){
     e.preventDefault()
     personService.erase(p)
-    .then(erasePerson)
+    .then(() => erasePerson(p))
+    .then(() => setMessage('success',`Information of ${p.name} has been removed from server`))
     .catch(() => setMessage('error',`Information of ${p.name} has already been removed from server`))
   }}
 
